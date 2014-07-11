@@ -309,6 +309,8 @@ public:
 
   virtual void configure();
 
+  void setOptimizationObjective(const std::string& objective_identifier);
+
 protected:
 
   void preSolve();

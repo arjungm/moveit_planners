@@ -45,6 +45,8 @@
 #include <moveit/profiler/profiler.h>
 #include <eigen_conversions/eigen_msg.h>
 
+#include <ompl/base/objectives/PathLengthOptimizationObjective.h>
+#include <ompl/base/objectives/MaximizeMinClearanceObjective.h>
 #include <ompl/base/samplers/UniformValidStateSampler.h>
 #include <ompl/base/goals/GoalLazySamples.h>
 #include <ompl/tools/config/SelfConfig.h>
@@ -71,6 +73,20 @@ ompl_interface::ModelBasedPlanningContext::ModelBasedPlanningContext(const std::
 {
   ompl_simple_setup_.getStateSpace()->computeSignature(space_signature_);
   ompl_simple_setup_.getStateSpace()->setStateSamplerAllocator(boost::bind(&ModelBasedPlanningContext::allocPathConstrainedSampler, this, _1));
+}
+
+void ompl_interface::ModelBasedPlanningContext::setOptimizationObjective(const std::string& objective_identifier)
+{
+  if( objective_identifier=="PathLength" )
+  {
+    ob::OptimizationObjectivePtr oo(new ob::PathLengthOptimizationObjective(ompl_simple_setup_.getSpaceInformation()));
+    ompl_simple_setup_.getProblemDefinition()->setOptimizationObjective(oo);
+  }
+  else if( objective_identifier=="MinClearance" )
+  {
+    ob::OptimizationObjectivePtr oo(new ob::MaximizeMinClearanceObjective(ompl_simple_setup_.getSpaceInformation()));
+    ompl_simple_setup_.getProblemDefinition()->setOptimizationObjective(oo);
+  }  
 }
 
 void ompl_interface::ModelBasedPlanningContext::setProjectionEvaluator(const std::string &peval)
