@@ -18,7 +18,6 @@ find_package(catkin REQUIRED COMPONENTS
   )
 
 find_package(OMPL REQUIRED)
-
 generate_dynamic_reconfigure_options("ompl_interface/cfg/OMPLDynamicReconfigure.cfg")
 
 catkin_package(
