@@ -137,36 +137,6 @@ void ompl_interface::OMPLInterface::configureContext(const ModelBasedPlanningCon
   }
 }
 
-bool ompl_interface::OMPLInterface::solve(const planning_scene::PlanningSceneConstPtr& planning_scene,
-                                          const planning_interface::MotionPlanRequest &req, planning_interface::MotionPlanResponse &res) const
-{
-  moveit::tools::Profiler::ScopedStart pslv;
-  moveit::tools::Profiler::ScopedBlock sblock("OMPLInterface:Solve");
-
-  ModelBasedPlanningContextPtr context = getPlanningContext(planning_scene, req);
-  if (context)
-  {
-    context->clear();
-    return context->solve(res);
-  }
-  else
-    return false;
-}
-
-bool ompl_interface::OMPLInterface::solve(const planning_scene::PlanningSceneConstPtr& planning_scene,
-                      const planning_interface::MotionPlanRequest &req, planning_interface::MotionPlanDetailedResponse &res) const
-{
-  moveit::tools::Profiler::ScopedStart pslv;
-  moveit::tools::Profiler::ScopedBlock sblock("OMPLInterface:Solve");
-
-  ModelBasedPlanningContextPtr context = getPlanningContext(planning_scene, req);
-  if (context)
-  {
-    ROS_INFO("Configuring planner with %s", objective_func_name->second.c_str());
-    context->setOptimizationObjective(objective_func_name->second);
-  }
-}
-
 void ompl_interface::OMPLInterface::loadConstraintApproximations(const std::string &path)
 {
   constraints_library_->loadConstraintApproximations(path);
