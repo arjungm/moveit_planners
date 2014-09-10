@@ -90,6 +90,20 @@ void ompl_interface::ModelBasedPlanningContext::setOptimizationObjective(const s
   }  
 }
 
+void ompl_interface::ModelBasedPlanningContext::setOptimizationObjective(const std::string& objective_identifier)
+{
+  if( objective_identifier=="PathLength" )
+  {
+    ob::OptimizationObjectivePtr oo(new ob::PathLengthOptimizationObjective(ompl_simple_setup_.getSpaceInformation()));
+    ompl_simple_setup_.getProblemDefinition()->setOptimizationObjective(oo);
+  }
+  else if( objective_identifier=="MinClearance" )
+  {
+    ob::OptimizationObjectivePtr oo(new ob::MaximizeMinClearanceObjective(ompl_simple_setup_.getSpaceInformation()));
+    ompl_simple_setup_.getProblemDefinition()->setOptimizationObjective(oo);
+  }  
+}
+
 void ompl_interface::ModelBasedPlanningContext::setProjectionEvaluator(const std::string &peval)
 {
   if (!spec_.state_space_)
