@@ -129,12 +129,7 @@ void ompl_interface::OMPLInterface::configureContext(const ModelBasedPlanningCon
   
   // if the configuration is available, set the optimization objective here (?)
   std::map<std::string, std::string> cconfig = context->getSpecificationConfig();
-  std::map<std::string, std::string>::iterator objective_func_name = cconfig.find( "objective" );
-  if( objective_func_name != cconfig.end() )
-  {
-    ROS_INFO("Configuring planner with %s", objective_func_name->second.c_str());
-    context->setOptimizationObjective(objective_func_name->second);
-  }
+  context->setOptimizationObjective(cconfig);
 }
 
 void ompl_interface::OMPLInterface::loadConstraintApproximations(const std::string &path)

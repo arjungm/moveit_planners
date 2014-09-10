@@ -47,11 +47,15 @@
 
 #include <ompl/base/objectives/PathLengthOptimizationObjective.h>
 #include <ompl/base/objectives/MaximizeMinClearanceObjective.h>
+#include <ompl/base/OptimizationObjective.h>
+#include <ompl/base/objectives/IntegralClearanceObjective.h>
 #include <ompl/base/samplers/UniformValidStateSampler.h>
 #include <ompl/base/goals/GoalLazySamples.h>
 #include <ompl/tools/config/SelfConfig.h>
 #include <ompl/base/spaces/SE3StateSpace.h>
 #include <ompl/datastructures/PDF.h>
+
+#include <sstream>
 
 ompl_interface::ModelBasedPlanningContext::ModelBasedPlanningContext(const std::string &name, const ModelBasedPlanningContextSpecification &spec) :
   planning_interface::PlanningContext(name, spec.state_space_->getJointModelGroup()->getName()),
@@ -76,18 +80,51 @@ ompl_interface::ModelBasedPlanningContext::ModelBasedPlanningContext(const std::
   ompl_simple_setup_->getStateSpace()->setStateSamplerAllocator(boost::bind(&ModelBasedPlanningContext::allocPathConstrainedSampler, this, _1));
 }
 
-void ompl_interface::ModelBasedPlanningContext::setOptimizationObjective(const std::string& objective_identifier)
+void ompl_interface::ModelBasedPlanningContext::setOptimizationObjective(const std::map<std::string, std::string>& cconfig)
 {
-  if( objective_identifier=="PathLength" )
+  //read the configuration
+  std::map<std::string, std::string>::const_iterator got_objective = cconfig.find( "objective" );
+  if( got_objective != cconfig.end() )
   {
-    ob::OptimizationObjectivePtr oo(new ob::PathLengthOptimizationObjective(ompl_simple_setup_->getSpaceInformation()));
-    ompl_simple_setup_->getProblemDefinition()->setOptimizationObjective(oo);
+    std::string objective_identifier = got_objective->second;
+    logWarn("Configuring planner with %s", objective_identifier.c_str());
+    if( objective_identifier=="PathLength" )
+    {
+      ob::OptimizationObjectivePtr oo(new ob::PathLengthOptimizationObjective(ompl_simple_setup_->getSpaceInformation()));
+      ompl_simple_setup_->getProblemDefinition()->setOptimizationObjective(oo);
+    }
+    else if( objective_identifier=="MinClearance" )
+    {
+      ob::OptimizationObjectivePtr oo(new ob::MaximizeMinClearanceObjective(ompl_simple_setup_->getSpaceInformation()));
+      ompl_simple_setup_->getProblemDefinition()->setOptimizationObjective(oo);
+    }
+    else if( objective_identifier=="DualObjective" )
+    {
+      std::map<std::string, std::string>::const_iterator got_weight = cconfig.find( "weight" );
+      double weight = 1.0;
+      if( got_weight!=cconfig.end() )
+      {
+        std::stringstream ss(got_weight->second);
+        ss >> weight;
+      }
+      else
+        logWarn("Missing weight configuration parameter for Dual Objective. Defaulting to 1");
+      // construct objectives
+      ob::OptimizationObjectivePtr opt_length(new ob::PathLengthOptimizationObjective(ompl_simple_setup_->getSpaceInformation())); 
+      ob::OptimizationObjectivePtr opt_clear(new ob::IntegralClearanceObjective(ompl_simple_setup_->getSpaceInformation()));
+      // combine
+      ob::MultiOptimizationObjective* multi_opt = new ob::MultiOptimizationObjective(ompl_simple_setup_->getSpaceInformation());
+      multi_opt->addObjective(opt_length, weight);
+      multi_opt->addObjective(opt_clear, 1.0);
+      // wrap
+      ob::OptimizationObjectivePtr oo( multi_opt );
+      ompl_simple_setup_->getProblemDefinition()->setOptimizationObjective(oo);
+    }
   }
-  else if( objective_identifier=="MinClearance" )
+  else
   {
-    ob::OptimizationObjectivePtr oo(new ob::MaximizeMinClearanceObjective(ompl_simple_setup_->getSpaceInformation()));
-    ompl_simple_setup_->getProblemDefinition()->setOptimizationObjective(oo);
-  }  
+    logError("No objective configuration found");
+  }
 }
 
 void ompl_interface::ModelBasedPlanningContext::setProjectionEvaluator(const std::string &peval)

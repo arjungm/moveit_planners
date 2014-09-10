@@ -310,7 +310,7 @@ public:
 
   virtual void configure();
 
-  void setOptimizationObjective(const std::string& objective_identifier);
+  void setOptimizationObjective(const std::map<std::string, std::string>& cconfig);
 
 protected:
 
