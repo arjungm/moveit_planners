@@ -87,7 +87,7 @@ void ompl_interface::ModelBasedPlanningContext::setOptimizationObjective(const s
   if( got_objective != cconfig.end() )
   {
     std::string objective_identifier = got_objective->second;
-    logWarn("Configuring planner with %s", objective_identifier.c_str());
+    logInform("[MBPC] Configuring planner with %s", objective_identifier.c_str());
     if( objective_identifier=="PathLength" )
     {
       ob::OptimizationObjectivePtr oo(new ob::PathLengthOptimizationObjective(ompl_simple_setup_->getSpaceInformation()));
@@ -123,7 +123,7 @@ void ompl_interface::ModelBasedPlanningContext::setOptimizationObjective(const s
   }
   else
   {
-    logError("No objective configuration found");
+    logWarn("No objective configuration found this planner configuration.");
   }
 }
 
